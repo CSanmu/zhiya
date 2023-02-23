@@ -8,7 +8,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,18 +76,22 @@ public class Main {
 
             File imageFile = onlyFileChooser.getSelectedFile();
             File excelFile = fileChooser.getSelectedFile();
-            System.out.println(imageFile.getPath());
-            try{
+            try {
                 mainAction(excelFile.getPath(), imageFile.getPath());
                 JOptionPane.showMessageDialog(null, "处理完成", "消息提示", JOptionPane.PLAIN_MESSAGE);    //消息对话框
-            }catch (Exception exception){
+            } catch (Exception exception) {
                 JOptionPane.showMessageDialog(null, "处理失败，联系管理员", "消息提示", JOptionPane.ERROR_MESSAGE);
             }
         });
         frame.getContentPane().add(panel, BorderLayout.CENTER);
     }
 
-    private static void mainAction(String excelPath,String folderPath){
+    private static void mainAction(String excelPath, String folderPath) throws IOException {
+        String fileName = "output.txt";
+        FileWriter writer = new FileWriter(fileName);
+        BufferedWriter bufferedWriter = new BufferedWriter(writer);
+
+
         Map<Integer, String> numberMap = getMap();
 //        String excelPath = "C:\\Users\\bb135\\Desktop\\代发客户排序导单模板（吱吖）(1).xls";
 //        String folderPath = "C:\\Users\\bb135\\Desktop\\徐方宇 2.7";
@@ -93,7 +100,8 @@ public class Main {
         for (Map.Entry<String, List<File>> item : nameToFileList.entrySet()) {
             List<ExcelModel> excelModels = nameToExcelModel.get(item.getKey());
             if (CollectionUtils.isEmpty(excelModels)) {
-                System.out.println(item.getKey() + " 在表格中没有数据");
+//                System.out.println(item.getKey() + " 在表格中没有数据");
+                bufferedWriter.write(item.getKey() + " 在表格中没有数据\n");
                 continue;
             }
             List<File> value = item.getValue();
@@ -108,7 +116,7 @@ public class Main {
                     int high = Integer.parseInt(split[1]);
                     String thickness = split[2];
                     String newName = serialNumber + "-" + name + " " + width / 10 + "-" + high / 10 + " " + thickness + "mm " + "第" + numberMap.get(i + 1) + "张";
-                    if(value.size() == 1){
+                    if (value.size() == 1) {
                         newName = serialNumber + "-" + name + " " + width / 10 + "-" + high / 10 + " " + thickness + "mm";
                     }
                     renameTo(file, newName);
@@ -119,17 +127,20 @@ public class Main {
                 // 重名的情况
                 if (phoneToExcelModelMap.size() > 1) {
                     for (File file : value) {
-                        System.out.println("重名：" + item.getKey() + " 图片名: " + file.getName());
+                        bufferedWriter.write("重名：" + item.getKey() + " 图片名: " + file.getName() + "\n");
+//                        System.out.println("重名：" + item.getKey() + " 图片名: " + file.getName());
                     }
                     continue;
                 }
 
                 for (File file : value) {
                     // 一个人尺寸不一样的情况
-                    System.out.println(item.getKey()+" 买了多张尺寸不同的 图片名： " + file.getName());
+                    bufferedWriter.write(item.getKey() + " 买了多张尺寸不同的 图片名： " + file.getName() + "\n");
+//                    System.out.println(item.getKey() + " 买了多张尺寸不同的 图片名： " + file.getName());
                 }
             }
         }
+        bufferedWriter.close();
     }
 
 
