@@ -4,8 +4,11 @@ import com.alibaba.excel.EasyExcel;
 import org.apache.commons.collections4.CollectionUtils;
 import photonamechange.excel.ExcelModel;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -37,10 +40,76 @@ public class Main {
 
 
     public static void main(String[] args) throws IOException {
-        List<ExcelModel> excelModels = readExcel("/Users/chenzengsen09222/Desktop/副本模拟表格(1)(1).xls");
-        Map<String, File> nameToPhoto = readImageFolder("/Users/chenzengsen09222/Desktop/1");
-        String fileName = "output.txt";
-        FileWriter writer = new FileWriter(fileName);
+        createWindow();
+    }
+
+    public static void createWindow() {
+        JFrame frame = new JFrame("图片重命名");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        createUI(frame);
+        frame.setSize(560, 200);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private static void createUI(final JFrame frame) {
+        JPanel panel = new JPanel();
+        BoxLayout layout = new BoxLayout(panel, BoxLayout.Y_AXIS);
+        panel.setLayout(layout);
+
+        JFileChooser onlyFileChooser = new JFileChooser();
+        onlyFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+        JFileChooser fileChooser = new JFileChooser();
+
+        JButton selectImageFileButton = new JButton("选择图片文件夹");
+        final JLabel selectImageFileButtonLabel = new JLabel();
+        selectImageFileButton.addActionListener(e -> {
+            int option = onlyFileChooser.showOpenDialog(frame);
+            if (option == JFileChooser.APPROVE_OPTION) {
+                File file = onlyFileChooser.getSelectedFile();
+                selectImageFileButtonLabel.setText("选择的文件是: " + file.getName());
+
+            }
+        });
+        panel.add(selectImageFileButton);
+        panel.add(selectImageFileButtonLabel);
+
+        JButton selectExcelFileButton = new JButton("选择Excel表格");
+        final JLabel selectExcelFileButtonLabel = new JLabel();
+        selectExcelFileButton.addActionListener(e -> {
+            int option = fileChooser.showOpenDialog(frame);
+            if (option == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                selectExcelFileButtonLabel.setText("选择的文件是: " + file.getName());
+            }
+        });
+        panel.add(selectExcelFileButton);
+        panel.add(selectExcelFileButtonLabel);
+
+        JButton startButton = new JButton("开始重命名");
+        panel.add(startButton);
+        startButton.addActionListener(e -> {
+            selectImageFileButton.setEnabled(false);
+            selectExcelFileButton.setEnabled(false);
+            startButton.setEnabled(false);
+
+            File imageFile = onlyFileChooser.getSelectedFile();
+            File excelFile = fileChooser.getSelectedFile();
+            try {
+                mainAction(excelFile.getPath(), imageFile.getPath());
+                JOptionPane.showMessageDialog(null, "处理完成", "消息提示", JOptionPane.PLAIN_MESSAGE);    //消息对话框
+            } catch (Exception exception) {
+                JOptionPane.showMessageDialog(null, "处理失败，联系管理员", "消息提示", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        frame.getContentPane().add(panel, BorderLayout.CENTER);
+    }
+
+    private static void mainAction(String excelPath, String filePath) throws IOException {
+        List<ExcelModel> excelModels = readExcel(excelPath);
+        Map<String, File> nameToPhoto = readImageFolder(filePath);
+        FileWriter writer = new FileWriter("output.txt");
         BufferedWriter bufferedWriter = new BufferedWriter(writer);
         excelModels.forEach(item -> {
             try {
